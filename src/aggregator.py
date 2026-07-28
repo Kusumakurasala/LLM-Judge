@@ -1,19 +1,30 @@
 from typing import List
-import numpy as np
+
+from src.schema import PointwiseVerdict, SuiteReport
 
 
-def aggregate_results(results: List[dict]) -> dict:
+def aggregate_results(verdicts: List[PointwiseVerdict]) -> SuiteReport:
     """
-    Aggregate evaluation results across the test suite.
+    Aggregate multiple evaluation results into a summary report.
     """
 
-    overall_scores = [r["overall_score"] for r in results]
-    passed = [r["passed"] for r in results]
+    if not verdicts:
+        return SuiteReport(
+            total_cases=0,
+            passed_cases=0,
+            failed_cases=0,
+            average_score=0.0,
+        )
 
-    return {
-        "total_tests": len(results),
-        "pass_rate": round(sum(passed) / len(results), 2) if results else 0,
-        "average_score": round(float(np.mean(overall_scores)), 2) if overall_scores else 0,
-        "max_score": round(float(np.max(overall_scores)), 2) if overall_scores else 0,
-        "min_score": round(float(np.min(overall_scores)), 2) if overall_scores else 0,
-    }
+    total_cases = len(verdicts)
+    passed_cases = sum(1 for v in verdicts if v.passed)
+    failed_cases = total_cases - passed_cases
+
+    average_score = sum(v.overall_score for v in verdicts) / total_cases
+
+    return SuiteReport(
+        total_cases=total_cases,
+        passed_cases=passed_cases,
+        failed_cases=failed_cases,
+        average_score=round(average_score, 2),
+    )

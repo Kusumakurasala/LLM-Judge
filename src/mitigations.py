@@ -1,43 +1,55 @@
-from typing import Dict
+import random
+
+from src.schema import TestCase
 
 
-def evaluate_pairwise_unbiased(judge_client, test_case, response_a, response_b) -> Dict:
+def shuffle_answers(test_case: TestCase) -> TestCase:
     """
-    Evaluate A vs B and B vs A to reduce position bias.
+    Shuffle answer order to reduce position bias.
     """
+    answers = [
+        test_case.reference_answer,
+        test_case.candidate_answer,
+    ]
 
-    # First evaluation: A vs B
-    forward = judge_client.judge_pair(
-        input_text=test_case["input"],
-        output_a=response_a,
-        output_b=response_b,
+    random.shuffle(answers)
+
+    return TestCase(
+        question=test_case.question,
+        reference_answer=answers[0],
+        candidate_answer=answers[1],
     )
 
-    # Second evaluation: B vs A
-    reverse = judge_client.judge_pair(
-        input_text=test_case["input"],
-        output_a=response_b,
-        output_b=response_a,
+
+def normalize_text(text: str) -> str:
+    """
+    Normalize whitespace to reduce formatting/style bias.
+    """
+    return " ".join(text.split())
+
+
+def truncate_answer(text: str, max_words: int = 200) -> str:
+    """
+    Reduce verbosity bias by limiting answer length.
+    """
+    words = text.split()
+
+    if len(words) <= max_words:
+        return text
+
+    return " ".join(words[:max_words])
+
+
+def preprocess_test_case(test_case: TestCase) -> TestCase:
+    """
+    Apply all mitigation steps before evaluation.
+    """
+    return TestCase(
+        question=normalize_text(test_case.question),
+        reference_answer=truncate_answer(
+            normalize_text(test_case.reference_answer)
+        ),
+        candidate_answer=truncate_answer(
+            normalize_text(test_case.candidate_answer)
+        ),
     )
-
-    # Map the reversed result back to the original labels
-    reverse_winner = {
-        "Model_A": "Model_B",
-        "Model_B": "Model_A",
-        "Tie": "Tie",
-    }.get(reverse.winner, "Tie")
-
-    consistent = (forward.winner == reverse_winner)
-
-    final_winner = (
-        forward.winner
-        if consistent
-        else "Tie (Position Inconsistency)"
-    )
-
-    return {
-        "forward_winner": forward.winner,
-        "reverse_winner": reverse_winner,
-        "position_consistent": consistent,
-        "final_winner": final_winner,
-    }

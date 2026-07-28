@@ -1,4 +1,9 @@
 google-genai
 pydantic
-numpy
 python-dotenv
+PyYAML
+tenacity
+pytest
+pandas
+numpy
+scikit-learn

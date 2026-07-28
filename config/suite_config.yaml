@@ -1,21 +1,6 @@
-judge_model: gpt-4o-mini
-
+judge_model: gemini-3.5-flash
 evaluation_mode: pointwise
-
-temperature: 0.0
-
-max_retries: 3
-
-output_format: json
-
-logging:
-  enabled: true
-  log_directory: logs
-
-criteria:
-  - correctness
-  - faithfulness
-  - completeness
-  - instruction_following
-  - tone
-  - safety
+temperature: 0.2
+pass_score: 3.5
+log_prompts: true
+log_results: true

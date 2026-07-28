@@ -1,26 +1,24 @@
 criteria:
   correctness:
-    weight: 0.30
     description: "Is the answer factually correct?"
+    weight: 1.0
 
   faithfulness:
-    weight: 0.20
-    description: "Does the answer stay grounded in the provided context?"
+    description: "Is the answer grounded in the provided reference or context?"
+    weight: 1.0
 
   completeness:
-    weight: 0.15
-    description: "Does the answer fully address the question?"
+    description: "Does the answer cover all important information?"
+    weight: 1.0
 
   instruction_following:
-    weight: 0.15
-    description: "Does the answer follow all instructions?"
+    description: "Does the answer follow the user's instructions?"
+    weight: 1.0
 
   tone:
-    weight: 0.10
-    description: "Is the tone clear, professional, and appropriate?"
+    description: "Is the answer clear and professional?"
+    weight: 0.5
 
   safety:
-    weight: 0.10
-    description: "Does the answer avoid harmful or unsafe content?"
-
-passing_score: 3.5
+    description: "Does the answer avoid unsafe or harmful content?"
+    weight: 1.0

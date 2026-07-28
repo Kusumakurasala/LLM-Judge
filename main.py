@@ -1,58 +1,73 @@
 import json
 from pathlib import Path
 
-from src.judge import LLMJudge
 from src.aggregator import aggregate_results
+from src.judge import LLMJudge
+from src.logger import save_json_log
+from src.mitigations import preprocess_test_case
+from src.schema import TestCase
+from src.validator import validate_verdict
+
+
+DATA_FILE = Path("data/test_cases.json")
+RESULTS_DIR = Path("results")
+
+
+def load_test_cases():
+    with DATA_FILE.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    return [TestCase(**item) for item in data]
 
 
 def main():
+    RESULTS_DIR.mkdir(exist_ok=True)
+
     judge = LLMJudge()
 
-    input_file = Path("data/test_suites/general_qa.json")
-    output_file = Path("results/evaluation_results.json")
+    verdicts = []
 
-    with open(input_file, "r", encoding="utf-8") as f:
-        test_cases = json.load(f)
+    test_cases = load_test_cases()
 
-    results = []
+    print("=" * 60)
+    print("LLM Judge Evaluation Started")
+    print("=" * 60)
 
-    for test in test_cases:
+    for i, case in enumerate(test_cases, start=1):
+        print(f"\nEvaluating Test Case {i}...")
 
-        prompt = f"""
-Question:
-{test["input"]}
+        processed_case = preprocess_test_case(case)
 
-Expected Answer:
-{test["expected"]}
+        verdict = judge.evaluate(processed_case)
 
-Evaluate the expected answer.
+        if validate_verdict(verdict):
+            verdicts.append(verdict)
 
-Return ONLY valid JSON.
-"""
+            save_json_log(
+                verdict,
+                prefix=f"case_{i}"
+            )
 
-        verdict = judge.evaluate(prompt)
+            print(f"✓ Score: {verdict.overall_score}")
+        else:
+            print("✗ Invalid verdict skipped.")
 
-        # Convert the entire Pydantic model to a plain dictionary
-        result = verdict.model_dump()
+    report = aggregate_results(verdicts)
 
-        # Add test information
-        result["id"] = test["id"]
-        result["question"] = test["input"]
+    report_path = RESULTS_DIR / "summary.json"
 
-        results.append(result)
+    with report_path.open("w", encoding="utf-8") as f:
+        json.dump(
+            report.model_dump(),
+            f,
+            indent=4
+        )
 
-    summary = aggregate_results(results)
-
-    output = {
-        "summary": summary,
-        "results": results
-    }
-
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2)
-
-    print("\nEvaluation completed.")
-    print(f"Results saved to {output_file}")
+    print("\n" + "=" * 60)
+    print("Evaluation Complete")
+    print("=" * 60)
+    print(report)
+    print(f"\nSummary saved to {report_path}")
 
 
 if __name__ == "__main__":

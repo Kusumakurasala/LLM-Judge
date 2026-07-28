@@ -1,0 +1,17 @@
+[
+    {
+        "question": "What is Artificial Intelligence?",
+        "reference_answer": "Artificial Intelligence is the simulation of human intelligence by machines.",
+        "candidate_answer": "Artificial Intelligence is the simulation of human intelligence by machines."
+    },
+    {
+        "question": "What is Machine Learning?",
+        "reference_answer": "Machine Learning is a subset of AI where systems learn from data.",
+        "candidate_answer": "Machine Learning allows computers to learn patterns from data without explicit programming."
+    },
+    {
+        "question": "What is Deep Learning?",
+        "reference_answer": "Deep Learning uses neural networks with many layers.",
+        "candidate_answer": "Deep Learning is an AI technique that uses deep neural networks."
+    }
+]

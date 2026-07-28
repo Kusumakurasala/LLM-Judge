@@ -1,26 +1,19 @@
-from sklearn.metrics import cohen_kappa_score
-import numpy as np
+from src.schema import PointwiseVerdict
 
 
-def calculate_judge_accuracy_and_kappa(human_scores, judge_scores):
+def validate_verdict(verdict: PointwiseVerdict) -> bool:
     """
-    Compare judge scores with human scores.
-    Returns exact agreement and Cohen's Kappa.
+    Validate a PointwiseVerdict object.
     """
 
-    human = np.array(human_scores)
-    judge = np.array(judge_scores)
+    if not verdict.scores:
+        return False
 
-    exact_agreement = np.mean(human == judge)
+    if not (1 <= verdict.overall_score <= 5):
+        return False
 
-    kappa = cohen_kappa_score(
-        human,
-        judge,
-        weights="quadratic"
-    )
+    for score in verdict.scores:
+        if not (1 <= score.score <= 5):
+            return False
 
-    return {
-        "sample_size": len(human),
-        "exact_agreement_rate": float(exact_agreement),
-        "cohens_kappa": float(kappa)
-    }
+    return True
